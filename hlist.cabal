@@ -4,16 +4,16 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0aad7f4e3435517a0fe49394c23043bd3d0304c21029dad222edec4ee8ea9513
+-- hash: 15eed56f9743e394c0e112d6dfe4c7ebc30dc031ab8884fe938de9713d81b307
 
 name:           hlist
 version:        0.1.0.0
 description:    Please see the README on GitHub at <https://github.com/githubuser/hlist#readme>
-homepage:       https://github.com/githubuser/hlist#readme
-bug-reports:    https://github.com/githubuser/hlist/issues
-author:         Author name here
-maintainer:     example@example.com
-copyright:      2021 Author name here
+homepage:       https://github.com/imobulus/hlist#readme
+bug-reports:    https://github.com/imobulus/hlist/issues
+author:         Egor Riabov
+maintainer:     imobulus@yandex.ru
+copyright:      2021 Egor Riabov
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
@@ -23,17 +23,20 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/hlist
+  location: https://github.com/imobulus/hlist
 
 library
   exposed-modules:
-      Lib
+      HList
+      HList.Fcf
+      HList.Internal.Coerce
   other-modules:
       Paths_hlist
   hs-source-dirs:
       src
   build-depends:
       base >=4.7 && <5
+    , first-class-families
   default-language: Haskell2010
 
 executable hlist-exe
@@ -45,6 +48,7 @@ executable hlist-exe
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , first-class-families
     , hlist
   default-language: Haskell2010
 
@@ -58,5 +62,6 @@ test-suite hlist-test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , first-class-families
     , hlist
   default-language: Haskell2010
