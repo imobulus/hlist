@@ -48,21 +48,12 @@ infixr ++|
 hetConcat :: forall (list :: [[Type]]).
   Proxy list ->
   HList (Map (Pure1 HList) @@ list) -> HList (Fcl.Concat @@ list)
-hetConcat _ HEmpty = case mapEmptyLaw (Proxy @(Pure1 HList)) (Proxy @list) of
+hetConcat _ HEmpty = case mapEmptyLaw (Proxy @'(Pure1 HList, list)) of
   Refl -> HEmpty
-hetConcat _ (a :| bs) = case mapHeadLaw (Proxy @(Pure1 HList)) (Proxy @list) of
-  Refl -> case mapTailLaw (Proxy @(Pure1 HList)) (Proxy @list) of
-    Refl -> case mapNonemptyLaw (Proxy @(Pure1 HList)) (Proxy @list) :: (HeadE list : TailE list) :~: list of
+hetConcat _ (a :| bs) = case mapHeadLaw (Proxy @'(Pure1 HList, list)) of
+  Refl -> case mapTailLaw (Proxy @'(Pure1 HList, list)) of
+    Refl -> case mapNonemptyLaw (Proxy @'(Pure1 HList, list)) :: (HeadE list : TailE list) :~: list of
       Refl -> a ++| hetConcat (Proxy @(TailE list)) bs
-
-testList :: HList '[HList '[Int, Int], HList '[Char]]
-testList = (1 :| 2 :| HEmpty) :| ('a' :| HEmpty) :| HEmpty
-
-testListConcat :: HList '[Int, Int, Char]
-testListConcat = hetConcat (Proxy @'[ '[Int, Int], '[Char] ]) testList
-
--- >>> testListConcat
--- 1 :| 2 :| 'a' :| HEmpty
 
 toList :: forall (a :: Type) (list :: [Type]).
   All (Equal a) @@ list =>
@@ -72,60 +63,60 @@ toList (a :| bs) = a : toList bs
 
 hetMapToList :: forall k (f :: k -> Exp Type) (g :: Type) (c :: k -> Exp Constraint) (list :: [k]).
   Eval (Fcf.All c list) =>
-  Proxy f -> Proxy g -> Proxy c -> Proxy list ->
+  Proxy '(f, g, c, list) ->
   (forall a. c @@ a => Proxy a -> f @@ a -> g) ->
   HList (Map f @@ list) -> [g]
-hetMapToList _ _ _ _ _ HEmpty = []
-hetMapToList p q r Proxy f (a :| bs) = let
-  aHead = coerceRefl a $ mapHeadLaw (Proxy @f) (Proxy @list)
-  bsTail = coerceRefl bs $ mapRefl (Proxy @HList) $ mapTailLaw (Proxy @f) (Proxy @list)
-  in case mapRefl (Proxy @(Fcf.All c)) $ mapNonemptyLaw (Proxy @f) (Proxy @list) of
-    Refl -> f (Proxy @(HeadE list)) aHead : hetMapToList p q r (Proxy @(TailE list)) f bsTail
+hetMapToList _ _ HEmpty = []
+hetMapToList _ f (a :| bs) = let
+  aHead = coerceRefl a $ mapHeadLaw (Proxy @'(f, list))
+  bsTail = coerceRefl bs $ mapRefl (Proxy @HList) $ mapTailLaw (Proxy @'(f, list))
+  in case mapRefl (Proxy @(Fcf.All c)) $ mapNonemptyLaw (Proxy @'(f, list)) of
+    Refl -> f (Proxy @(HeadE list)) aHead : hetMapToList (Proxy @'(f, g, c, TailE list)) f bsTail
 
 hetMap :: forall (f :: Type -> Exp Type) (c :: Type -> Exp Constraint) (list :: [Type]).
   Eval (Fcf.All c list) =>
-  Proxy f -> Proxy c ->
+  Proxy '(f, c) ->
   (forall a. c @@ a => a -> f @@ a) ->
   HList list ->
     HList (Eval (Map f list))
-hetMap Proxy Proxy _ HEmpty = HEmpty
-hetMap p q f (a :| bs) = f a :| hetMap p q f bs
+hetMap _ _ HEmpty = HEmpty
+hetMap proxy f (a :| bs) = f a :| hetMap proxy f bs
 
 -- | Maps a function over a heterogenous list with environment @f@
 hetMapEnv :: forall k (f :: k -> Exp Type) (g :: k -> Exp Type) (c :: k -> Exp Constraint) (list :: [k]).
   Eval (Fcf.All c list) =>
-  Proxy f -> Proxy g -> Proxy c -> Proxy list ->
+  Proxy '(f, g, c, list) ->
   (forall a. c @@ a => Proxy a -> f @@ a -> g @@ a) ->
   HList (Map f @@ list) ->
     HList (Map g @@ list)
 
-hetMapEnv Proxy Proxy Proxy Proxy _ HEmpty = coerceRefl HEmpty proofListIsEmpty
+hetMapEnv _ _ HEmpty = coerceRefl HEmpty proofListIsEmpty
  where
-  proofListIsEmpty = mapRefl (Proxy @HList) $ mapFcfRefl (Proxy @(Map g)) $ mapEmptyLaw (Proxy @f) (Proxy @list)
+  proofListIsEmpty = mapRefl (Proxy @HList) $ mapFcfRefl (Proxy @(Map g)) $ mapEmptyLaw (Proxy @'(f, list))
 
-hetMapEnv p q r Proxy f ((a :: a) :| (bs :: HList bs)) = let
-  aHead = coerceRefl a $ mapHeadLaw (Proxy @f) (Proxy @list)
-  bsTail = coerceRefl bs $ mapRefl (Proxy @HList) $ mapTailLaw (Proxy @f) (Proxy @list)
-  in case mapRefl (Proxy @(Fcf.All c)) $ mapNonemptyLaw (Proxy @f) (Proxy @list) of
-    Refl -> f (Proxy @(HeadE list)) aHead :| hetMapEnv p q r (Proxy @(TailE list)) f bsTail
+hetMapEnv _ f ((a :: a) :| (bs :: HList bs)) = let
+  aHead = coerceRefl a $ mapHeadLaw (Proxy @'(f, list))
+  bsTail = coerceRefl bs $ mapRefl (Proxy @HList) $ mapTailLaw (Proxy @'(f, list))
+  in case mapRefl (Proxy @(Fcf.All c)) $ mapNonemptyLaw (Proxy @'(f, list)) of
+    Refl -> f (Proxy @(HeadE list)) aHead :| hetMapEnv (Proxy @'(f, g, c, TailE list)) f bsTail
 
 
 hetSequence :: forall (m :: Type -> Type) (list :: [Type]). Monad m => HList (Eval (MapPure m list)) -> m (HList list)
 
 hetSequence HEmpty = return $ coerceRefl HEmpty proofListIsEmpty
  where
-  proofListIsEmpty = mapRefl (Proxy @HList) $ mapEmptyLaw (Proxy @(Pure1 m)) (Proxy @list)
+  proofListIsEmpty = mapRefl (Proxy @HList) $ mapEmptyLaw (Proxy @'(Pure1 m, list))
 
 hetSequence ((a :: a) :| (bs :: HList bs)) = do
   a_ref <- aTyped
   bs_ref <- hetSequence bsTyped
   return $ coerceRefl (a_ref :| bs_ref) proofHeadTail
  where
-  proofHead = mapHeadLaw (Proxy @(Pure1 m)) (Proxy @list)
+  proofHead = mapHeadLaw (Proxy @'(Pure1 m, list))
     :: a :~: m (HeadE list)
-  proofTail = mapRefl (Proxy @HList) $ mapTailLaw (Proxy @(Pure1 m)) (Proxy @list)
+  proofTail = mapRefl (Proxy @HList) $ mapTailLaw (Proxy @'(Pure1 m, list))
     :: HList bs :~: HList (Map (Pure1 m) @@ TailE list)
-  proofHeadTail = mapRefl (Proxy @HList) $ mapNonemptyLaw (Proxy @(Pure1 m)) (Proxy @list)
+  proofHeadTail = mapRefl (Proxy @HList) $ mapNonemptyLaw (Proxy @'(Pure1 m, list))
     :: HList (HeadE list ': TailE list) :~: HList list
   aTyped = coerceRefl a proofHead
   bsTyped = coerceRefl bs proofTail

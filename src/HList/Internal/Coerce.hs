@@ -44,28 +44,28 @@ type family TailE (list :: [k]) :: [k] where
   TailE '[] = TL.TypeError ('TL.Text "Attempt to take head of empty list")
 
 mapFishLaw :: forall k l m (list :: [k]) (f :: l -> Exp m) (g :: k -> Exp l).
-  Proxy f -> Proxy g -> Proxy list ->
+  Proxy '(f, g, list) ->
   Eval (Map (f <=< g) list) :~: Eval (Map f (Eval (Map g list)))
-mapFishLaw _ _ _ = unsafeCoerce Refl
+mapFishLaw _ = unsafeCoerce Refl
 
 mapEmptyLaw :: forall k l (list :: [k]) (f :: k -> Exp l).
   Eval (Map f list) ~ '[] =>
-  Proxy f -> Proxy list -> '[] :~: list
-mapEmptyLaw _ _ = unsafeCoerce Refl
+  Proxy '(f, list) -> '[] :~: list
+mapEmptyLaw _ = unsafeCoerce Refl
 
 mapHeadLaw :: forall k l a bs (list :: [k]) (f :: k -> Exp l).
   Eval (Map f list) ~ (a ': bs) =>
-  Proxy f -> Proxy list -> a :~: (f @@ HeadE list)
-mapHeadLaw _ _ = unsafeCoerce Refl
+  Proxy '(f, list) -> a :~: (f @@ HeadE list)
+mapHeadLaw _ = unsafeCoerce Refl
 
 mapTailLaw :: forall k l a bs (list :: [k]) (f :: k -> Exp l).
   Map f @@ list ~ (a ': bs) =>
-  Proxy f -> Proxy list -> bs :~: (Map f @@ TailE list)
-mapTailLaw _ _ = unsafeCoerce Refl
+  Proxy '(f, list) -> bs :~: (Map f @@ TailE list)
+mapTailLaw _ = unsafeCoerce Refl
 
 mapNonemptyLaw :: forall k l a bs (list :: [k]) (f :: k -> Exp l).
   Map f @@ list ~ (a ': bs) =>
-  Proxy f -> Proxy list -> (HeadE list ': TailE list) :~: list
-mapNonemptyLaw _ _ = unsafeCoerce Refl
+  Proxy '(f, list) -> (HeadE list ': TailE list) :~: list
+mapNonemptyLaw _ = unsafeCoerce Refl
 
 ---- end unsafeCoerce zone ----
