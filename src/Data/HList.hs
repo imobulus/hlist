@@ -9,17 +9,32 @@
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE TypeApplications #-}
-module HList (
-  module HList,
-  module HList.Fcf
+-- |
+-- Module:      Data.HList
+-- Copyright:   (c) 2021 Egor Riabov
+-- License:     BSD3
+-- Maintainer:  Egor Riabov <imobulus@yandex.ru>
+-- Stability:   experimental
+-- Portability: portable
+--
+-- Package for working with heterogenous lists, which are basically tuples on steroids.
+module Data.HList (
+  -- * What is this?
+  --
+  -- $what
+  --
+  -- ** What is this for?
+  -- $why
+  module Data.HList,
+  module Data.HList.Fcf
 ) where
 
 import Data.Kind
-import qualified HList.Fcf as Fcf
-import HList.Fcf
+import qualified Data.HList.Fcf as Fcf
+import Data.HList.Fcf
 import Fcf.Class.Monoid (type (<>))
 import Data.Proxy (Proxy(Proxy))
-import HList.Internal.Coerce
+import Data.HList.Internal.Coerce
 import qualified Fcf.Data.List as Fcl
 
 infixr :||
@@ -124,3 +139,19 @@ hetSequence ((a :: a) :|| (bs :: HList bs)) = do
     :: HList (HeadE list ': TailE list) :~: HList list
   aTyped = coerceRefl a proofHead
   bsTyped = coerceRefl bs proofTail
+
+-- $what
+--
+-- Heterogenous list (or 'HList') is a list of values, whose types are annotated
+-- on type-level using promoted lists from @{-# LANGUAGE DataKinds #-}@, but with
+-- ordinary list-like structure.
+--
+-- > myHList :: HList '[Int, Char, Bool]
+-- > myHList = 2 :|| 'f' :|| True :|| HEmpty
+
+-- $why
+--
+-- HList's can be useful in code where arbitrary tuples are involved, such as
+-- Nikita Volkov's HaSql library (https://hackage.haskell.org/package/hasql).
+-- Unlike tuples, HList's are more generic, thus allow writing functions on
+-- them, similar to @concat@ and @map@ for ordinary Lists.

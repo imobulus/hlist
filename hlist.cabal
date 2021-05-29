@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.4.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 60295dfbce64b024f77e37bd21e8515dda6cde575e9644ed6eadabeeda664543
+-- hash: f6bda24b9b95aabe924dabb684bf8876262161f4e4b6123bfb5f7bd05736420d
 
 name:           hlist
 version:        0.1.0.0
@@ -27,9 +27,9 @@ source-repository head
 
 library
   exposed-modules:
-      HList
-      HList.Fcf
-      HList.Internal.Coerce
+      Data.HList
+      Data.HList.Fcf
+      Data.HList.Internal.Coerce
   other-modules:
       Paths_hlist
   hs-source-dirs:

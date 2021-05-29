@@ -3,8 +3,8 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE TypeOperators #-}
-module HList.Fcf (
-  module HList.Fcf,
+module Data.HList.Fcf (
+  module Data.HList.Fcf,
   module Fcf
 ) where
 

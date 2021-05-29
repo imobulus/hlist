@@ -8,9 +8,9 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE TypeApplications #-}
-module HList.Internal.Coerce (
+module Data.HList.Internal.Coerce (
   module Data.Type.Equality,
-  module HList.Internal.Coerce
+  module Data.HList.Internal.Coerce
 ) where
 
 -- import Hasql.Combinators.HList
