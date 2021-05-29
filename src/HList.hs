@@ -92,9 +92,11 @@ hetMapEnv :: forall k (f :: k -> Exp Type) (g :: k -> Exp Type) (c :: k -> Exp C
   HList (Map f @@ list) ->
     HList (Map g @@ list)
 
-hetMapEnv _ _ HEmpty = coerceRefl HEmpty proofListIsEmpty
- where
-  proofListIsEmpty = mapRefl (Proxy @HList) $ mapFcfRefl (Proxy @(Map g)) $ mapEmptyLaw (Proxy @'(f, list))
+hetMapEnv _ _ HEmpty = case
+  mapRefl (Proxy @HList) $
+  mapFcfRefl (Proxy @(Map g)) $
+  mapEmptyLaw (Proxy @'(f, list)) of
+  Refl -> HEmpty
 
 hetMapEnv _ f ((a :: a) :|| (bs :: HList bs)) = let
   aHead = coerceRefl a $ mapHeadLaw (Proxy @'(f, list))

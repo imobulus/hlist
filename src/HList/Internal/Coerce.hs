@@ -26,8 +26,7 @@ coerceRefl a Refl = a
 mapRefl :: Proxy f -> a :~: b -> f a :~: f b
 mapRefl Proxy Refl = Refl
 
-mapFcfRefl :: forall k l (f :: k -> Exp l) (a :: k) (b :: k).
-  Proxy f -> a :~: b -> (f @@ a) :~: (f @@ b)
+mapFcfRefl :: Proxy f -> a :~: b -> (f @@ a) :~: (f @@ b)
 mapFcfRefl Proxy Refl = Refl
 
 symRefl :: a :~: b -> b :~: a
@@ -41,7 +40,7 @@ type family HeadE (list :: [k]) :: k where
 
 type family TailE (list :: [k]) :: [k] where
   TailE (_ ': bs) = bs
-  TailE '[] = TL.TypeError ('TL.Text "Attempt to take head of empty list")
+  TailE '[] = TL.TypeError ('TL.Text "Attempt to take tail of empty list")
 
 mapFishLaw :: forall k l m (list :: [k]) (f :: l -> Exp m) (g :: k -> Exp l).
   Proxy '(f, g, list) ->

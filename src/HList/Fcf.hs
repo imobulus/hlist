@@ -24,9 +24,6 @@ type family ConcatAll (list :: [[k]]) :: [k] where
 data MapPure :: (k -> l) -> [k] -> Exp [l]
 type instance Eval (MapPure f list) = Eval (Map (Pure1 f) list)
 
-data FcfCurry :: [Type] -> Type -> Exp Type
-type instance Eval (FcfCurry list r) = Curry list r
-
 data CollectConstraints :: [Constraint] -> Exp Constraint
 type instance Eval (CollectConstraints '[]) = ()
 type instance Eval (CollectConstraints (a ': bs)) = (a, Eval (CollectConstraints bs))
