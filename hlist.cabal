@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f6bda24b9b95aabe924dabb684bf8876262161f4e4b6123bfb5f7bd05736420d
+-- hash: 1b6a9e96bf4e8f488099b21a586db36805ffffc90f5b4b087a0067109979c63b
 
 name:           hlist
 version:        0.1.0.0
@@ -29,7 +29,10 @@ library
   exposed-modules:
       Data.HList
       Data.HList.Fcf
+      Data.HList.HList
       Data.HList.Internal.Coerce
+      Data.HList.TH
+      Data.HList.Tuples
   other-modules:
       Paths_hlist
   hs-source-dirs:
@@ -38,6 +41,7 @@ library
       Cabal
     , base >=4.7 && <5
     , first-class-families
+    , template-haskell
   default-language: Haskell2010
 
 executable hlist-exe
@@ -52,6 +56,7 @@ executable hlist-exe
     , base >=4.7 && <5
     , first-class-families
     , hlist
+    , template-haskell
   default-language: Haskell2010
 
 test-suite hlist-test
@@ -67,4 +72,5 @@ test-suite hlist-test
     , base >=4.7 && <5
     , first-class-families
     , hlist
+    , template-haskell
   default-language: Haskell2010
