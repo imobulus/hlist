@@ -20,17 +20,11 @@ import Fcf (type (<=<), Exp, Eval, type (@@), Map)
 import qualified GHC.TypeLits as TL
 import Data.Type.Equality
 
-coerceRefl :: forall a b. a -> a :~: b -> b
-coerceRefl a Refl = a
-
 mapRefl :: Proxy f -> a :~: b -> f a :~: f b
 mapRefl Proxy Refl = Refl
 
 mapFcfRefl :: Proxy f -> a :~: b -> (f @@ a) :~: (f @@ b)
 mapFcfRefl Proxy Refl = Refl
-
-symRefl :: a :~: b -> b :~: a
-symRefl Refl = Refl
 
 ---- begin unsafeCoerce zone ----
 

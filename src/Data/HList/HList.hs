@@ -85,10 +85,12 @@ hetConcat :: forall (list :: [[Type]]).
   HList (Map (Pure1 HList) @@ list) -> HList (Fcl.Concat @@ list)
 hetConcat _ HEmpty = case mapEmptyLaw (Proxy @'(Pure1 HList, list)) of
   Refl -> HEmpty
-hetConcat _ (a :|| bs) = case mapHeadLaw (Proxy @'(Pure1 HList, list)) of
-  Refl -> case mapTailLaw (Proxy @'(Pure1 HList, list)) of
-    Refl -> case mapNonemptyLaw (Proxy @'(Pure1 HList, list)) :: (HeadE list : TailE list) :~: list of
-      Refl -> a ++| hetConcat (Proxy @(TailE list)) bs
+hetConcat _ (a :|| bs) = case (
+  mapHeadLaw (Proxy @'(Pure1 HList, list)),
+  mapTailLaw (Proxy @'(Pure1 HList, list)),
+  mapNonemptyLaw (Proxy @'(Pure1 HList, list)) :: (HeadE list : TailE list) :~: list
+  ) of
+  (Refl, Refl, Refl) -> a ++| hetConcat (Proxy @(TailE list)) bs
 
 toList :: forall (a :: Type) (list :: [Type]).
   All (Equal a) @@ list =>
@@ -102,11 +104,12 @@ hetMapToList :: forall k (f :: k -> Exp Type) (g :: Type) (c :: k -> Exp Constra
   (forall a. c @@ a => Proxy a -> f @@ a -> g) ->
   HList (Map f @@ list) -> [g]
 hetMapToList _ _ HEmpty = []
-hetMapToList _ f (a :|| bs) = let
-  aHead = coerceRefl a $ mapHeadLaw (Proxy @'(f, list))
-  bsTail = coerceRefl bs $ mapRefl (Proxy @HList) $ mapTailLaw (Proxy @'(f, list))
-  in case mapRefl (Proxy @(Fcf.All c)) $ mapNonemptyLaw (Proxy @'(f, list)) of
-    Refl -> f (Proxy @(HeadE list)) aHead : hetMapToList (Proxy @'(f, g, c, TailE list)) f bsTail
+hetMapToList _ f (a :|| bs) = case (
+  mapHeadLaw (Proxy @'(f, list)),
+  mapRefl (Proxy @HList) $ mapTailLaw (Proxy @'(f, list)),
+  mapRefl (Proxy @(Fcf.All c)) $ mapNonemptyLaw (Proxy @'(f, list))
+  ) of
+  (Refl, Refl, Refl) -> f (Proxy @(HeadE list)) a : hetMapToList (Proxy @'(f, g, c, TailE list)) f bs
 
 hetMap :: forall (f :: Type -> Exp Type) (c :: Type -> Exp Constraint) (list :: [Type]).
   Eval (Fcf.All c list) =>
@@ -131,32 +134,31 @@ hetMapEnv _ _ HEmpty = case
   mapEmptyLaw (Proxy @'(f, list)) of
   Refl -> HEmpty
 
-hetMapEnv _ f ((a :: a) :|| (bs :: HList bs)) = let
-  aHead = coerceRefl a $ mapHeadLaw (Proxy @'(f, list))
-  bsTail = coerceRefl bs $ mapRefl (Proxy @HList) $ mapTailLaw (Proxy @'(f, list))
-  in case mapRefl (Proxy @(Fcf.All c)) $ mapNonemptyLaw (Proxy @'(f, list)) of
-    Refl -> f (Proxy @(HeadE list)) aHead :|| hetMapEnv (Proxy @'(f, g, c, TailE list)) f bsTail
+hetMapEnv _ f ((a :: a) :|| (bs :: HList bs)) = case (
+  mapHeadLaw (Proxy @'(f, list)),
+  mapRefl (Proxy @HList) $ mapTailLaw (Proxy @'(f, list)),
+  mapRefl (Proxy @(Fcf.All c)) $ mapNonemptyLaw (Proxy @'(f, list))
+  ) of
+  (Refl, Refl, Refl) -> f (Proxy @(HeadE list)) a :|| hetMapEnv (Proxy @'(f, g, c, TailE list)) f bs
 
 
 hetSequence :: forall (m :: Type -> Type) (list :: [Type]). Monad m => HList (Eval (MapPure m list)) -> m (HList list)
 
-hetSequence HEmpty = return $ coerceRefl HEmpty proofListIsEmpty
- where
-  proofListIsEmpty = mapRefl (Proxy @HList) $ mapEmptyLaw (Proxy @'(Pure1 m, list))
+hetSequence HEmpty = case mapRefl (Proxy @HList) $ mapEmptyLaw (Proxy @'(Pure1 m, list)) of
+  Refl -> return HEmpty
 
-hetSequence ((a :: a) :|| (bs :: HList bs)) = do
-  a_ref <- aTyped
-  bs_ref <- hetSequence bsTyped
-  return $ coerceRefl (a_ref :|| bs_ref) proofHeadTail
- where
-  proofHead = mapHeadLaw (Proxy @'(Pure1 m, list))
-    :: a :~: m (HeadE list)
-  proofTail = mapRefl (Proxy @HList) $ mapTailLaw (Proxy @'(Pure1 m, list))
-    :: HList bs :~: HList (Map (Pure1 m) @@ TailE list)
-  proofHeadTail = mapRefl (Proxy @HList) $ mapNonemptyLaw (Proxy @'(Pure1 m, list))
+hetSequence ((a :: a) :|| (bs :: HList bs)) = case (
+  mapHeadLaw (Proxy @'(Pure1 m, list))
+    :: a :~: m (HeadE list),
+  mapRefl (Proxy @HList) $ mapTailLaw (Proxy @'(Pure1 m, list))
+    :: HList bs :~: HList (Map (Pure1 m) @@ TailE list),
+  mapRefl (Proxy @HList) $ mapNonemptyLaw (Proxy @'(Pure1 m, list))
     :: HList (HeadE list ': TailE list) :~: HList list
-  aTyped = coerceRefl a proofHead
-  bsTyped = coerceRefl bs proofTail
+  ) of
+  (Refl, Refl, Refl) -> do
+    a_ref <- a
+    bs_ref <- hetSequence bs
+    return (a_ref :|| bs_ref)
 
 -- $what
 --
